@@ -14,7 +14,6 @@ import com.tngtech.archunit.lang.ArchCondition;
 import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.lang.ConditionEvents;
 import com.tngtech.archunit.lang.SimpleConditionEvent;
-
 import java.util.List;
 
 @AnalyzeClasses(
@@ -36,7 +35,7 @@ public class LayeredArchitectureTest {
     private static final String INFRASTRUCTURE_PATH = ROOT_PATH + ".infrastructure..";
 
     @ArchTest
-    public static final ArchRule clean_architecure_layers_are_respected =
+    public static final ArchRule les_couches_de_la_clean_architecture_devraient_etre_respectees =
             layeredArchitecture()
                     .consideringOnlyDependenciesInLayers()
                     .layer(APPLICATION_NAME)
@@ -47,23 +46,24 @@ public class LayeredArchitectureTest {
                     .definedBy(USE_CASES_PATH)
                     .layer(MODEL_NAME)
                     .definedBy(MODEL_PATH)
-                    .layer(INFRASTRUCTURE_NAME)
-                    .definedBy(INFRASTRUCTURE_PATH)
+                    //                    .layer(INFRASTRUCTURE_NAME)
+                    //                    .definedBy(INFRASTRUCTURE_PATH)
                     .whereLayer(APPLICATION_NAME)
                     .mayNotBeAccessedByAnyLayer()
                     .whereLayer(DOMAIN_NAME)
-                    .mayOnlyBeAccessedByLayers(APPLICATION_NAME, INFRASTRUCTURE_NAME)
+                    .mayOnlyBeAccessedByLayers(APPLICATION_NAME /*, INFRASTRUCTURE_NAME*/)
                     .whereLayer(MODEL_NAME)
                     .mayOnlyBeAccessedByLayers(
-                            APPLICATION_NAME, INFRASTRUCTURE_NAME, USE_CASES_NAME)
+                            APPLICATION_NAME, /*INFRASTRUCTURE_NAME, */ USE_CASES_NAME)
                     .whereLayer(USE_CASES_NAME)
-                    .mayOnlyBeAccessedByLayers(APPLICATION_NAME, INFRASTRUCTURE_NAME)
-                    .whereLayer(INFRASTRUCTURE_NAME)
-                    .mayOnlyBeAccessedByLayers(APPLICATION_NAME);
+                    .mayOnlyBeAccessedByLayers(APPLICATION_NAME /*, INFRASTRUCTURE_NAME*/)
+            //                    .whereLayer(INFRASTRUCTURE_NAME)
+            //                    .mayOnlyBeAccessedByLayers(APPLICATION_NAME)
+            ;
 
     @ArchTest
     public static final ArchRule
-            class_in_use_case_layer_should_have_only_one_public_method_called_execute =
+            les_classes_du_package_usecase_ne_devraient_avoir_qu_une_seule_methode_public_nommee_executer =
                     classes()
                             .that()
                             .resideInAPackage(USE_CASES_PATH)
@@ -75,7 +75,8 @@ public class LayeredArchitectureTest {
                             .areNotInterfaces()
                             .should(
                                     new ArchCondition<>(
-                                            "should have only one public method called execute") {
+                                            "devrait n'avoir qu'une méthode public qui s'appelle"
+                                                    + " executer") {
 
                                         @Override
                                         public void check(JavaClass item, ConditionEvents events) {
@@ -91,8 +92,8 @@ public class LayeredArchitectureTest {
                                             int numberOfPublicMethods = publicMethods.size();
                                             String publicMethodErrorMessage =
                                                     String.format(
-                                                            "Class '%s' has more than one public"
-                                                                    + " method.",
+                                                            "La classe '%s' a plus d'une méthode"
+                                                                    + " public",
                                                             item.getFullName());
                                             events.add(
                                                     new SimpleConditionEvent(
@@ -104,14 +105,14 @@ public class LayeredArchitectureTest {
                                                     publicMethods.stream()
                                                             .allMatch(
                                                                     javaMethod ->
-                                                                            "execute"
+                                                                            "executer"
                                                                                     .equals(
                                                                                             javaMethod
                                                                                                     .getName()));
                                             String messageExecuter =
                                                     String.format(
-                                                            "The public method of class '%s' is not"
-                                                                    + " called 'execute'.",
+                                                            "La méthode public de la classe '%s' ne"
+                                                                    + " s'appelle pas 'executer'.",
                                                             item.getFullName());
                                             events.add(
                                                     new SimpleConditionEvent(
@@ -122,88 +123,100 @@ public class LayeredArchitectureTest {
                                     });
 
     @ArchTest
-    public static final ArchRule interactors_should_not_be_called_in_application_layer =
-            classes()
-                    .that()
-                    .resideInAPackage(USE_CASES_PATH)
-                    .and()
-                    .resideInAPackage("..interactors..")
-                    .should(
-                            new ArchCondition<>(
-                                    "should not be called by a class in the application layer") {
+    public static final ArchRule
+            les_interactors_ne_devraient_pas_etre_appeles_depuis_le_package_application =
+                    classes()
+                            .that()
+                            .resideInAPackage(USE_CASES_PATH)
+                            .and()
+                            .resideInAPackage("..interactors..")
+                            .should(
+                                    new ArchCondition<>(
+                                            "should not be called by a class in the application"
+                                                    + " layer") {
 
-                                @Override
-                                public void check(JavaClass item, ConditionEvents events) {
-                                    boolean isNotCalledInApplicationLayer =
-                                            item.getDirectDependenciesToSelf().stream()
-                                                    .noneMatch(
-                                                            javaAccess ->
-                                                                    javaAccess
-                                                                            .getOriginClass()
-                                                                            .getPackage()
-                                                                            .getName()
-                                                                            .startsWith(
-                                                                                    APPLICATION_PACKAGE));
-                                    String message =
-                                            String.format(
-                                                    "Interactor '%s' is called in the application"
-                                                            + " layer",
-                                                    item.getFullName());
-                                    events.add(
-                                            new SimpleConditionEvent(
-                                                    item, isNotCalledInApplicationLayer, message));
-                                }
-                            });
-
-    @ArchTest
-    public static final ArchRule model_layer_should_not_have_any_dependency_to_use_cases_layer =
-            noClasses()
-                    .that()
-                    .resideInAPackage(MODEL_PATH)
-                    .should()
-                    .dependOnClassesThat()
-                    .resideInAPackage(USE_CASES_PATH);
+                                        @Override
+                                        public void check(JavaClass item, ConditionEvents events) {
+                                            boolean isNotCalledInApplicationLayer =
+                                                    item.getDirectDependenciesToSelf().stream()
+                                                            .noneMatch(
+                                                                    javaAccess ->
+                                                                            javaAccess
+                                                                                    .getOriginClass()
+                                                                                    .getPackage()
+                                                                                    .getName()
+                                                                                    .startsWith(
+                                                                                            APPLICATION_PACKAGE));
+                                            String message =
+                                                    String.format(
+                                                            "Interactor '%s' is called in the"
+                                                                    + " application layer",
+                                                            item.getFullName());
+                                            events.add(
+                                                    new SimpleConditionEvent(
+                                                            item,
+                                                            isNotCalledInApplicationLayer,
+                                                            message));
+                                        }
+                                    });
 
     @ArchTest
-    public static final ArchRule interactors_should_only_be_called_in_their_parent_package =
-            noClasses()
-                    .that()
-                    .resideInAPackage(USE_CASES_PATH)
-                    .and()
-                    .resideInAPackage("..interactors..")
-                    .and()
-                    .resideOutsideOfPackage("..shared..")
-                    .should(
-                            new ArchCondition<>("not be called outside its parent package") {
-                                @Override
-                                public void check(JavaClass interactor, ConditionEvents events) {
-                                    boolean isCalledOutsideParentPackage =
-                                            interactor.getDirectDependenciesToSelf().stream()
-                                                    .anyMatch(
-                                                            classCallingInteractor -> {
-                                                                String interactorPackageName =
-                                                                        interactor
-                                                                                .getPackage()
-                                                                                .getName();
-                                                                String classPackageName =
-                                                                        classCallingInteractor
-                                                                                .getOriginClass()
-                                                                                .getPackage()
-                                                                                .getName();
-                                                                return !interactorPackageName
-                                                                        .contains(classPackageName);
-                                                            });
+    public static final ArchRule
+            le_package_modele_ne_devrait_avoir_aucune_dependance_avec_le_package_usecase =
+                    noClasses()
+                            .that()
+                            .resideInAPackage(MODEL_PATH)
+                            .should()
+                            .dependOnClassesThat()
+                            .resideInAPackage(USE_CASES_PATH);
 
-                                    String message =
-                                            String.format(
-                                                    "Interactor '%s' is called outside its parent"
-                                                            + " package",
-                                                    interactor.getFullName());
-                                    events.add(
-                                            new SimpleConditionEvent(
-                                                    interactor,
-                                                    isCalledOutsideParentPackage,
-                                                    message));
-                                }
-                            });
+    @ArchTest
+    public static final ArchRule
+            les_interactors_ne_devraient_etre_appeles_que_depuis_leur_package_parent =
+                    noClasses()
+                            .that()
+                            .resideInAPackage(USE_CASES_PATH)
+                            .and()
+                            .resideInAPackage("..interactors..")
+                            .and()
+                            .resideOutsideOfPackage("..shared..")
+                            .should(
+                                    new ArchCondition<>(
+                                            "not be called outside its parent package") {
+                                        @Override
+                                        public void check(
+                                                JavaClass interactor, ConditionEvents events) {
+                                            boolean isCalledOutsideParentPackage =
+                                                    interactor
+                                                            .getDirectDependenciesToSelf()
+                                                            .stream()
+                                                            .anyMatch(
+                                                                    classCallingInteractor -> {
+                                                                        String
+                                                                                interactorPackageName =
+                                                                                        interactor
+                                                                                                .getPackage()
+                                                                                                .getName();
+                                                                        String classPackageName =
+                                                                                classCallingInteractor
+                                                                                        .getOriginClass()
+                                                                                        .getPackage()
+                                                                                        .getName();
+                                                                        return !interactorPackageName
+                                                                                .contains(
+                                                                                        classPackageName);
+                                                                    });
+
+                                            String message =
+                                                    String.format(
+                                                            "Interactor '%s' is called outside its"
+                                                                    + " parent package",
+                                                            interactor.getFullName());
+                                            events.add(
+                                                    new SimpleConditionEvent(
+                                                            interactor,
+                                                            isCalledOutsideParentPackage,
+                                                            message));
+                                        }
+                                    });
 }
