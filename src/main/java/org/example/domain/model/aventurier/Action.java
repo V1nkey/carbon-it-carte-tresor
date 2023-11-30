@@ -21,8 +21,4 @@ public enum Action {
             default -> throw new NoSuchElementException();
         };
     }
-
-    public String getInitiale() {
-        return initiale;
-    }
 }

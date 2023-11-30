@@ -27,49 +27,7 @@ public class EffectuerMouvement {
         int nouvelleOrdonnee = aventurier.getOrdonnee();
         int nouvelleAbscisse = aventurier.getAbscisse();
 
-        Case caseArrivee =
-                switch (aventurier.getOrientation()) {
-                    case NORD -> {
-                        // Si l'aventurier est positionné sur la première ligne, il ne peut pas se
-                        // déplacer vers le nord et reste où il est
-                        if (ancienneOrdonnee == 0) {
-                            yield plateau[ancienneOrdonnee][ancienneAbscisse];
-                        }
-
-                        nouvelleOrdonnee = ancienneOrdonnee - 1;
-                        yield plateau[nouvelleOrdonnee][ancienneAbscisse];
-                    }
-                    case SUD -> {
-                        // Si l'aventurier est positionné sur la dernière ligne, il ne peut pas se
-                        // déplacer vers le sud et reste où il est
-                        if (ancienneOrdonnee == carte.getHauteur() - 1) {
-                            yield plateau[ancienneOrdonnee][ancienneAbscisse];
-                        }
-
-                        nouvelleOrdonnee = ancienneOrdonnee + 1;
-                        yield plateau[nouvelleOrdonnee][ancienneAbscisse];
-                    }
-                    case EST -> {
-                        // Si l'aventurier est positionné sur la dernière colonne, il ne peut pas se
-                        // déplacer vers l'est et reste où il est
-                        if (ancienneAbscisse == carte.getLargeur() - 1) {
-                            yield plateau[ancienneAbscisse][ancienneOrdonnee];
-                        }
-
-                        nouvelleAbscisse = ancienneAbscisse + 1;
-                        yield plateau[ancienneOrdonnee][nouvelleAbscisse];
-                    }
-                    case OUEST -> {
-                        // Si l'aventurier est positionné sur la première colonne, il ne peut pas se
-                        // déplacer vers l'ouest et reste où il est
-                        if (ancienneAbscisse == 0) {
-                            yield plateau[ancienneOrdonnee][ancienneAbscisse];
-                        }
-
-                        nouvelleAbscisse = ancienneAbscisse - 1;
-                        yield plateau[ancienneOrdonnee][nouvelleAbscisse];
-                    }
-                };
+        Case caseArrivee = determinerPotentielleCaseArrivee(aventurier, carte);
 
         // Si la case d'arrivée est la même que celle de départ (this), c'est que l'aventurier est
         // sur le bord de la carte et veut se déplacer en dehors, on l'en empêche donc
@@ -95,5 +53,58 @@ public class EffectuerMouvement {
                 aventurier.recupererTresor();
             }
         }
+    }
+
+    private Case determinerPotentielleCaseArrivee(Aventurier aventurier, Carte carte) {
+        int ancienneAbscisse = aventurier.getAbscisse();
+        int ancienneOrdonnee = aventurier.getOrdonnee();
+
+        int nouvelleOrdonnee = aventurier.getOrdonnee();
+        int nouvelleAbscisse = aventurier.getAbscisse();
+
+        Case[][] plateau = carte.getPlateau();
+
+        return switch (aventurier.getOrientation()) {
+            case NORD -> {
+                // Si l'aventurier est positionné sur la première ligne, il ne peut pas se
+                // déplacer vers le nord et reste où il est
+                if (ancienneOrdonnee == 0) {
+                    yield plateau[ancienneOrdonnee][ancienneAbscisse];
+                }
+
+                nouvelleOrdonnee = ancienneOrdonnee - 1;
+                yield plateau[nouvelleOrdonnee][ancienneAbscisse];
+            }
+            case SUD -> {
+                // Si l'aventurier est positionné sur la dernière ligne, il ne peut pas se
+                // déplacer vers le sud et reste où il est
+                if (ancienneOrdonnee == carte.getHauteur() - 1) {
+                    yield plateau[ancienneOrdonnee][ancienneAbscisse];
+                }
+
+                nouvelleOrdonnee = ancienneOrdonnee + 1;
+                yield plateau[nouvelleOrdonnee][ancienneAbscisse];
+            }
+            case EST -> {
+                // Si l'aventurier est positionné sur la dernière colonne, il ne peut pas se
+                // déplacer vers l'est et reste où il est
+                if (ancienneAbscisse == carte.getLargeur() - 1) {
+                    yield plateau[ancienneAbscisse][ancienneOrdonnee];
+                }
+
+                nouvelleAbscisse = ancienneAbscisse + 1;
+                yield plateau[ancienneOrdonnee][nouvelleAbscisse];
+            }
+            case OUEST -> {
+                // Si l'aventurier est positionné sur la première colonne, il ne peut pas se
+                // déplacer vers l'ouest et reste où il est
+                if (ancienneAbscisse == 0) {
+                    yield plateau[ancienneOrdonnee][ancienneAbscisse];
+                }
+
+                nouvelleAbscisse = ancienneAbscisse - 1;
+                yield plateau[ancienneOrdonnee][nouvelleAbscisse];
+            }
+        };
     }
 }
